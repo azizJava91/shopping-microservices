@@ -1,0 +1,45 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: yourName
+      changes:
+        - createTable:
+            tableName: product
+            columns:
+              - column:
+                  name: product_id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: brand
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: model
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: manufacture_date
+                  type: DATETIME
+              - column:
+                  name: price
+                  type: DECIMAL(19,2)
+              - column:
+                  name: category_id
+                  type: BIGINT
+              - column:
+                  name: active
+                  type: INT
+                  defaultValueNumeric: 1
+              - column:
+                  name: image
+                  type: BLOB

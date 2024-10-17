@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3
+      author: yourName
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: product
+            baseColumnNames: category_id
+            referencedTableName: category
+            referencedColumnNames: category_id
+            constraintName: fk_product_category

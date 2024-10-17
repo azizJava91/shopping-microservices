@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Upload</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Product Upload</h2>
+    <form id="productForm" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" class="form-control" required>
+            <div class="invalid-feedback" id="nameError"></div>
+        </div>
+        <div class="form-group">
+            <label for="brand">Brand:</label>
+            <input type="text" id="brand" name="brand" class="form-control" required>
+            <div class="invalid-feedback" id="brandError"></div>
+        </div>
+        <div class="form-group">
+            <label for="model">Model:</label>
+            <input type="text" id="model" name="model" class="form-control" required>
+            <div class="invalid-feedback" id="modelError"></div>
+        </div>
+        <div class="form-group">
+            <label for="manufactureDate">Manufacture Date:</label>
+            <input type="datetime-local" id="manufactureDate" name="manufactureDate" class="form-control">
+            <div class="invalid-feedback" id="manufactureDateError"></div>
+        </div>
+        <div class="form-group">
+            <label for="price">Price:</label>
+            <input type="number" id="price" name="price" class="form-control" required>
+            <div class="invalid-feedback" id="priceError"></div>
+        </div>
+        <div class="form-group">
+            <label for="category">Category:</label>
+            <select id="category" name="category" class="form-control" required>
+                <option value="" disabled selected>Select a category</option>
+            </select>
+            <div class="invalid-feedback" id="categoryError"></div>
+        </div>
+        <div class="form-group">
+            <label for="file">Product Image:</label>
+            <input type="file" id="file" name="file" class="form-control-file">
+            <div class="invalid-feedback" id="fileError"></div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Submit</button>
+    </form>
+</div>
+
+<script>
+    async function fetchCategories() {
+        try {
+            const response = await fetch('/category/list');
+            if (response.ok) {
+                const data = await response.json();
+                const categorySelect = document.getElementById('category');
+                data.body.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = JSON.stringify(category);  // category nesnesini JSON olarak set et
+                    option.textContent = category.name;  // İsmi göster
+                    categorySelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching categories:', error);
+        }
+    }
+
+    async function submitForm(event) {
+        event.preventDefault();
+
+        var form = document.getElementById('productForm');
+        var formData = new FormData(form);
+
+        var categoryElement = document.getElementById('category');
+        var selectedCategory = JSON.parse(categoryElement.value); // category nesnesini parse et
+
+        var product = {
+            name: document.getElementById('name').value,
+            brand: document.getElementById('brand').value,
+            model: document.getElementById('model').value,
+            manufactureDate: document.getElementById('manufactureDate').value,
+            price: document.getElementById('price').value,
+            category: selectedCategory
+        };
+
+        formData.append('product', new Blob([JSON.stringify(product)], {type: "application/json"}));
+
+        try {
+            const response = await fetch('/product/save', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.statusCode === 200 && data.message === "Success") {
+                    window.location.href = '/product/all';  // Başarılı kayıt sonrası liste sayfasına yönlendirme
+                } else {
+                    displayErrors(data.body);
+                }
+            } else {
+                console.error('Form gönderilemedi:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Hata:', error);
+        }
+    }
+
+    function displayErrors(errors) {
+        let fields = ["name", "brand", "model", "manufactureDate", "price", "category", "file"];
+        fields.forEach(field => {
+            document.getElementById(field + "Error").textContent = "";
+        });
+
+        for (let [field, messages] of Object.entries(errors)) {
+            if (fields.includes(field)) {
+                document.getElementById(field + "Error").textContent = messages.join(", ");
+            }
+        }
+    }
+
+    document.getElementById('productForm').addEventListener('submit', submitForm);
+    window.onload = fetchCategories;
+</script>
+</body>
+</html>
