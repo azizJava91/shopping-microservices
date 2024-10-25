@@ -4,13 +4,15 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.io.Serializable;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 
-public class CategoryRequest {
+public class CategoryRequest   {
     @NotNull(message = "Id bos gonderile bilmez")
     Long categoryId;
     @NotNull(message = "ad bos ola bilmez")

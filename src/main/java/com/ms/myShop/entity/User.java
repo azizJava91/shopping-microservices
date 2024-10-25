@@ -2,39 +2,29 @@ package com.ms.myShop.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
-
+@Data
 @Entity
-@Setter
-@Getter
+@Table(name = "users")
+@DynamicInsert
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = ("product"))
-@DynamicInsert
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Product implements Serializable {
+
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long productId;
+    Long userId;
     String name;
-    String brand;
-    String model;
-    LocalDateTime manufactureDate;
-    BigDecimal price;
-    @ManyToOne
-    @JoinColumn(name = "category_id")
-    Category category;
+    String email;
+    String password;
+    String authorization;
     @ColumnDefault("1")
     Integer active;
-
-    @OneToOne
-    Image image;
 }

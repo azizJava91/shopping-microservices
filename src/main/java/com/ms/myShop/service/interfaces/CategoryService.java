@@ -7,12 +7,12 @@ import com.ms.myShop.dto.response.Response;
 import java.util.List;
 
 public interface CategoryService {
-    Response save(CategoryRequest categoryRequest);
+    Response save(String name);
 
     Response<List<CategoryResponse>> list();
 
 
-    Response update(CategoryRequest categoryRequest);
+    Response update(Long categoryId, String name);
 
     Response delete(Long categoryId);
 }

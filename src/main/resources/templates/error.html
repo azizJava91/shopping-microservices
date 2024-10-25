@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error Page</title>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8d7da;
+      color: #721c24;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .error-box {
+      text-align: center;
+      border: 1px solid #f5c6cb;
+      background-color: #f8d7da;
+      padding: 20px;
+      border-radius: 5px;
+    }
+    .error-code {
+      font-size: 3rem;
+      font-weight: bold;
+    }
+    .error-message {
+      font-size: 1.5rem;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="error-box">
+  <div class="error-code" id="errorCode">Error Code: </div>
+  <div class="error-message" id="errorMessage">Error Message: </div>
+  <button class="btn btn-primary mt-4" onclick="goBack()">Geri Dön</button>
+</div>
+<script>
+  function goBack() {
+    window.history.back();
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const statusCode = localStorage.getItem('statusCode');
+    const message = localStorage.getItem('message');
+    if (statusCode) {
+      document.getElementById('errorCode').textContent = `Error Code: ${statusCode}`;
+    }
+    if (message) {
+      document.getElementById('errorMessage').textContent = `Error Message: ${message}`;
+    }
+  });
+</script>
+</body>
+</html>

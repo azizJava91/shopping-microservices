@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product List</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #e8f5e9;
+        }
+        .product-card {
+            border: 2px solid #2c3e50;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+            transition: 0.3s;
+            background-color: white;
+        }
+        .product-card:hover {
+            box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+        }
+        .product-img {
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px 10px 0 0;
+        }
+        .card-body {
+            text-align: left;
+            padding: 15px;
+        }
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .card-text {
+            color: #7f8c8d;
+        }
+        .card-footer {
+            text-align: right;
+            background-color: #f8f9fa;
+            padding: 10px 15px;
+            border-top: 1px solid #ddd;
+            border-radius: 0 0 10px 10px;
+        }
+        .card-text strong {
+            font-weight: bold;
+            color: #2980b9;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+            padding: 0;
+        }
+        .pagination li {
+            margin: 0 5px;
+        }
+        .pagination button {
+            padding: 10px 15px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+        }
+        .pagination button:hover {
+            background-color: #0056b3;
+        }
+        .no-products {
+            color: red;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<!-- Existing HTML content -->
+
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Product List</h2>
+    <div class="d-flex justify-content-between mb-4">
+        <button class="btn btn-success" onclick="window.location.href='create'">Yeni Product Ekle</button>
+    </div>
+    <div id="productList" class="row"></div>
+    <ul class="pagination" id="pagination"></ul>
+    <div id="noProductsMessage" class="no-products text-center" style="display: none;">Sayfada ürün kalmadı.</div>
+</div>
+
+<script>
+    let currentPage =  0;
+    const productsPerPage = 4;
+
+    async function fetchProductList(page) {
+        try {
+            const response = await fetch('/product/page', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    page: page,
+                    size: productsPerPage
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log(data); // Dönen veriyi kontrol et
+
+                const productList = document.getElementById('productList');
+                const paginationElement = document.getElementById('pagination');
+
+                productList.innerHTML = ''; // Listeyi temizle
+                paginationElement.innerHTML = ''; // Sayfa butonlarını temizle
+
+
+
+                data.body.content.forEach(product => {
+                    const productCard = document.createElement('div');
+                    productCard.className = 'col-md-6';
+                    productCard.innerHTML = `
+              <div class="product-card">
+                ${product.image ? `<img src="data:${product.image.fileType};base64,${product.image.imageData}" class="card-img-top product-img" alt="${product.name}">` : ''}
+                <div class="card-body">
+                  <p class="card-text"><strong>Name:</strong> ${product.name || 'N/A'}</p>
+                  <p class="card-text"><strong>Brand:</strong> ${product.brand || 'N/A'}</p>
+                  <p class="card-text"><strong>Model:</strong> ${product.model || 'N/A'}</p>
+                  <p class="card-text"><strong>Price:</strong> ${product.price || 'N/A'}</p>
+                  <p class="card-text"><strong>Manufacture Date:</strong> ${product.manufactureDate ? new Date(product.manufactureDate).toLocaleDateString() : 'N/A'}</p>
+                  <p class="card-text"><strong>Category:</strong> ${product.category}</p>
+                </div>
+                <div class="card-footer">
+                  <button class="btn btn-primary update-product" data-product-id="${product.productId}">Update Product</button>
+                  <button class="btn btn-danger delete-product" data-product-id="${product.productId}">Delete Product</button>
+                </div>
+              </div>
+            `;
+                    productList.appendChild(productCard);
+                });
+
+                for (let i = 0; i < data.body.page.totalPages; i++) {
+                    const li = document.createElement('li');
+                    const button = document.createElement('button');
+                    button.innerText = i + 1;
+                    button.onclick = () => {
+                        currentPage = i;
+                        fetchProductList(i);
+                    };
+                    li.appendChild(button);
+                    paginationElement.appendChild(li);
+                }
+
+                document.querySelectorAll('.update-product').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const productId = this.getAttribute('data-product-id');
+                        window.localStorage.setItem('productId', productId);
+                        window.location.href = '/product/update';
+                    });
+                });
+
+                document.querySelectorAll('.delete-product').forEach(button => {
+                    button.addEventListener('click', async function () {
+                        const productId = this.getAttribute('data-product-id');
+                        const deleteResponse = await fetch(`/product/delete/${productId}`, {
+                            method: 'PUT',
+                        });
+
+                        if (deleteResponse.ok) {
+                            // Her defasında birinci sayfaya dön
+                            await fetchProductList(0);
+                            // window.localStorage.setItem('lastPage', 0);
+                        } else {
+                            console.error('Failed to delete product:', deleteResponse.statusText);
+                        }
+                    });
+                });
+
+            } else {
+                console.error('Failed to fetch product list:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error fetching product list:', error);
+        }
+    }
+    document.addEventListener('DOMContentLoaded', () => fetchProductList(currentPage));
+</script>
+</body>
+</html>

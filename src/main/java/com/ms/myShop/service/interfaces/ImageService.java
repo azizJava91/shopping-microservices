@@ -9,4 +9,7 @@ import java.io.IOException;
 
 public interface ImageService {
     Image saveImage( MultipartFile file, ProductRequest productRequest) throws IOException;
+
+
+    Image updateImage(MultipartFile file, ProductRequest productRequest, Long imageId) throws IOException;
 }

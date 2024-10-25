@@ -4,11 +4,13 @@ import com.ms.myShop.dto.request.CategoryRequest;
 import com.ms.myShop.dto.response.CategoryResponse;
 import com.ms.myShop.dto.response.Response;
 import com.ms.myShop.entity.Category;
+import com.ms.myShop.entity.Product;
 import com.ms.myShop.enums.EnumAvailableStatus;
 import com.ms.myShop.enums.ResponseCodes;
 import com.ms.myShop.enums.ResponseMessages;
 import com.ms.myShop.exception.ShopException;
 import com.ms.myShop.repository.CategoryRepository;
+import com.ms.myShop.repository.ProductRepository;
 import com.ms.myShop.service.interfaces.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,15 +26,16 @@ import java.util.List;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
-
+private final ProductRepository productRepository;
 
     @Override
-    @CachePut(key = "#root.methodName", value = "category")
-    public Response save(CategoryRequest categoryRequest) {
+    @CacheEvict(value = "categories", allEntries = true)
+
+    public Response save(String name) {
         Response response = new Response<>();
         try {
             Category category = Category.builder()
-                    .name(categoryRequest.getName())
+                    .name(name)
                     .build();
             Category saved = categoryRepository.save(category);
             if (saved.getCategoryId() != null) {
@@ -51,7 +54,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @Cacheable(key = "#root.methodName", value = "categories")
+    @Cacheable(key = "#root.methodName", value = "categories", unless = "#result.statusCode!=200")
     public Response<List<CategoryResponse>> list() {
 
         Response<List<CategoryResponse>> response = new Response<>();
@@ -80,17 +83,20 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @CachePut(value = "categories", key = "root.methodName + '_' + #categoryRequest.categoryId")
+
     @CacheEvict(value = "categories", allEntries = true)
 
-    public Response update(CategoryRequest categoryRequest) {
+    public Response update(Long categoryId, String name) {
         Response response = new Response<>();
         try {
-            Category category = categoryRepository.findByCategoryIdAndActive(categoryRequest.getCategoryId(), EnumAvailableStatus.ACTIVE.value);
+            System.err.println(categoryId);
+            System.err.println(name);
+            Category category = categoryRepository.findByCategoryIdAndActive(categoryId, EnumAvailableStatus.ACTIVE.value);
+            System.err.println(category.getCategoryId());
             if (category == null) {
                 throw new ShopException(ResponseMessages.CATEGORY_NOT_FOUND.value, ResponseCodes.NOT_FOUND.value);
             }
-            category.setName(categoryRequest.getName());
+            category.setName(name);
 
             categoryRepository.save(category);
             response.setMessage(ResponseMessages.SUCCESS.value);
@@ -109,7 +115,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    @CacheEvict(value = "categories", allEntries = true)
+    @CacheEvict( value = {"categories", "categoryByIdAndActive"}, allEntries = true)
     public Response delete(Long categoryId) {
         Response response = new Response<>();
         try {
@@ -117,6 +123,13 @@ public class CategoryServiceImpl implements CategoryService {
             if (category == null) {
                 throw new ShopException(ResponseMessages.CATEGORY_NOT_FOUND.value, ResponseCodes.NOT_FOUND.value);
             }
+
+            Long productCount =productRepository.countByActiveAndCategory(EnumAvailableStatus.ACTIVE.value, category);
+            if (productCount > 0){
+                System.err.println("productCount: "+productCount);
+                throw new ShopException(ResponseMessages.CATEGORY_HAS_ASSOCIATED_PRODUCT.value, ResponseCodes.CONFLICT.value);
+            }
+
             category.setActive(EnumAvailableStatus.DELETED.value);
             categoryRepository.save(category);
             response.setMessage(ResponseMessages.SUCCESS.value);

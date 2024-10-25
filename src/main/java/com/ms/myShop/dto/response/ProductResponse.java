@@ -1,6 +1,7 @@
 package com.ms.myShop.dto.response;
 
 
+import com.ms.myShop.entity.Category;
 import com.ms.myShop.entity.Image;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -23,5 +24,6 @@ public class ProductResponse implements Serializable {
     String model;
     LocalDateTime manufactureDate;
     BigDecimal price;
+    String category;
     Image image;
 }
